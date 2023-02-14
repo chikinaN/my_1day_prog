@@ -16,30 +16,22 @@
         <header>
             <p>ヘッダーはあとで決める</p>
         </header>
-        <div id="side">
-            <ul>
-                <li><a href="#">初めに</a></li>
-                <li><a href="#">概要</a></li>
-                <li><a href="#">宣言</a></li>
-                <li><a href="#time_calendar">進捗カレンダー</a></li>
-                <li><a href="#2023/2/8">1.チュートリアル</a></li>
-            </ul>
-        </div>
+        <div id="side"></div>
         <div id="main">
             <div id="g-ms" class="g-ms">
                 <div class="g-ms_i"></div>
             </div>
-            <section id="first" class="content">
-                <h3 class="title">初めに</h3>
+            <section id="first" class="content" content="初めに">
+                <h3 class="title"></h3>
             </section>
-            <section id="outline" class="content">
-                <h3 class="title">概要</h3>
+            <section id="outline" class="content" content="概要">
+                <h3 class="title"></h3>
             </section>
-            <section id="declaration" class="content">
-                <h3 class="title">宣言</h3>
+            <section id="declaration" class="content" content="宣言">
+                <h3 class="title"></h3>
             </section>
-            <section id="time_calendar" class="content">
-                <h3 class="title">進捗カレンダー</h3>
+            <section id="time_calendar" class="content" content="進捗カレンダー">
+                <h3 class="title"></h3>
                 <div id="calendar">
                     <h1 id="header"></h1>
                     <div id="next-prev-button">
@@ -49,8 +41,8 @@
                     <div id="calendar_content"></div>
                 </div>
             </section>
-            <section years="2023" month="2" day="8" id="2023/2/8" class="content">
-                <h3 class="title">1.チュートリアル</h3>
+            <section years="2023" month="2" day="8" id="2023/2/8" class="content" content="1.チュートリアル">
+                <h3 class="title"></h3>
                 <div class="tag" tag="tutorial DXOpal ruby"></div>
                 <p>
                     DXOpalのチュートリアルを触った
@@ -65,8 +57,8 @@
                     <iframe src="./prog/game/ruby/game_1/index.html" width="640px" height="500px"></iframe>
                 </div>
             </section>
-            <section years="2023" month="2" day="5" id="2023/2/5" class="content">
-                <h3 class="title">num.none</h3>
+            <section years="2023" month="2" day="5" id="2023/2/5" class="content" content="num.none">
+                <h3 class="title"></h3>
                 <div class="tag" tag="tutorial DXOpal ruby test"></div>
             </section>
             <section years="2023" month="2" day="1" id="2023/2/1" class="content"></section>
@@ -74,4 +66,6 @@
     </body>
     <script src="src/js/mouse.js"></script>
     <script src="src/js/tag.js"></script>
+    <script src="src/js/side.js"></script>
+    <script src="src/js/content.js"></script>
 </html>
