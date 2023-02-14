@@ -1,0 +1,28 @@
+.g-ms {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    transform: translate3d(50vw, 50vh, 0);
+    pointer-events: none;
+    transition: all 0.3s ease-out;
+}
+.g-ms_i {
+    width: 60px;
+    height: 60px;
+    margin: -30px 0 0 -30px;
+    border-radius: 30px;
+    transition: all .3s ease;
+    background: rgba(0,0,0,.05);
+    opacity: 0;
+}
+.g-ms.g-ms-active .g-ms_i {
+    opacity: 1;
+}
+.g-ms.g-ms-hover {
+    mix-blend-mode: difference;
+}
+.g-ms.g-ms-hover .g-ms_i {
+    background: #fff;
+    transform: scale(.2);
+}

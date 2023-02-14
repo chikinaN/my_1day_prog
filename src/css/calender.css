@@ -1,0 +1,86 @@
+#calendar {
+    max-width: 700px;
+    margin: 0 auto;
+    color: #666;
+    position: relative;
+    margin-bottom: 10px;
+}
+#header {
+    position: absolute;
+    text-align: center;
+    font-size: 24px;
+    width: 100%;
+    margin: 1rem 0 0;
+}
+
+#calendar_content {
+    text-align: center;
+    width: 100%;
+}
+table {
+    outline: 2px solid #ddd;
+    border-collapse: collapse;
+    width: 100%;
+}
+th {
+    color: #000;
+}
+th, td {
+    outline: 1px solid #ddd;
+    height: 50px;
+    width: 100px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin: 0;
+    text-align: center;
+}
+td {
+    position: relative;
+    vertical-align: top;
+}
+td::before {
+    content: "";
+    position: absolute;
+    width: 80%;
+    height: 1.5px;
+    left: 50%;
+    top: 35px;
+    background-color: #ddd;
+    transform: translateX(-50%);
+}
+td:first-child {
+    color: rgb(255, 0, 0);
+}
+td:last-child {
+    color: rgba(0, 0, 255);
+}
+td.disabled {
+    color: #ccc;
+}
+td.today {
+    background-color: #000;
+    color: #fff;
+}
+
+#next-prev-button {
+    position: relative;
+}
+#next-prev-button button{
+    cursor: pointer;
+    background: #000;
+    color: #fff;
+    border-radius: 4px;
+    font-size: 1rem;
+    padding: 0.5rem 2rem;
+    margin: 1rem 0;
+}
+#next-prev-button button:hover{
+    background-color: #fff;
+    color: #000;
+}
+#prev {
+    float: left;
+}
+#next {
+    float: right;
+}

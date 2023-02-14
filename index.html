@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>1day_プログラミング</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css" integrity="sha512-SzlrxWUlpfuzQ+pcUCosxcglQRNAq/DZjVsC0lE40xsADsfeQoEypE+enwcOiGjk/bSuGGKHEyjSoQ1zVisanQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <link rel="stylesheet" href="src/css/style.css">
+        <link rel="stylesheet" href="src/css/calender.css">
+        <link rel="stylesheet" href="src/css/mouse.css">
+        <link rel="stylesheet" href="src/css/tag.css">
+        <script src="./src/js/calendar.js"></script>
+    </head>
+    <body>
+        <header>
+            <p>ヘッダーはあとで決める</p>
+        </header>
+        <div id="side">
+            <ul>
+                <li><a href="#">初めに</a></li>
+                <li><a href="#">概要</a></li>
+                <li><a href="#">宣言</a></li>
+                <li><a href="#time_calendar">進捗カレンダー</a></li>
+                <li><a href="#2023/2/8">1.チュートリアル</a></li>
+            </ul>
+        </div>
+        <div id="main">
+            <div id="g-ms" class="g-ms">
+                <div class="g-ms_i"></div>
+            </div>
+            <section id="first" class="content">
+                <h3 class="title">初めに</h3>
+            </section>
+            <section id="outline" class="content">
+                <h3 class="title">概要</h3>
+            </section>
+            <section id="declaration" class="content">
+                <h3 class="title">宣言</h3>
+            </section>
+            <section id="time_calendar" class="content">
+                <h3 class="title">進捗カレンダー</h3>
+                <div id="calendar">
+                    <h1 id="header"></h1>
+                    <div id="next-prev-button">
+                        <button id="prev" onclick="prev()"><</button>
+                        <button id="next" onclick="next()">></button>
+                    </div>
+                    <div id="calendar_content"></div>
+                </div>
+            </section>
+            <section years="2023" month="2" day="8" id="2023/2/8" class="content">
+                <h3 class="title">1.チュートリアル</h3>
+                <div class="tag" tag="tutorial DXOpal ruby"></div>
+                <p>
+                    DXOpalのチュートリアルを触った
+                </p>
+                <div class="game_frame">
+                    <div class="game_comment">
+                        spaceで開始でき、左右の矢印キーで移動できます。
+                        <span class="notes">
+                            音がかなり大きいので注意
+                        </span>
+                    </div><!-- <div class="hide_frame"></div> -->
+                    <iframe src="./prog/game/ruby/game_1/index.html" width="640px" height="500px"></iframe>
+                </div>
+            </section>
+            <section years="2023" month="2" day="5" id="2023/2/5" class="content">
+                <h3 class="title">num.none</h3>
+                <div class="tag" tag="tutorial DXOpal ruby test"></div>
+            </section>
+            <section years="2023" month="2" day="1" id="2023/2/1" class="content"></section>
+        </div>
+    </body>
+    <script src="src/js/mouse.js"></script>
+    <script src="src/js/tag.js"></script>
+</html>
