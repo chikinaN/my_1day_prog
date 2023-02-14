@@ -1,2 +1,4 @@
-# my_1day_prog
-自分のrubyなどの練習
+# プログラミングの練習のために作ったページ
+
+https://chikinan.github.io/my_1day_prog/
+
