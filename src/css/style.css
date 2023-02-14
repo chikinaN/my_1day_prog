@@ -93,6 +93,14 @@ header {
     width: 100%;
     z-index: 12;
 }
+a.active {
+    bottom: 0;
+    height: 100%;
+    width: calc(100% + 10px);
+    transform: translateX(15px);
+    border-radius: 5px;
+    transition:all .5s;
+}
 .content {
     width: 100%;
 }
