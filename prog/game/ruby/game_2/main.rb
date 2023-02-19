@@ -1,72 +1,153 @@
 require 'dxopal'
 include DXOpal
 
-img_bar   = Image.new(100, 20, C_WHITE)
-img_hwall = Image.new(20, 480, C_BLUE)
-img_vwall = Image.new(640, 20, C_BLUE)
-img_ball  = Image.new(20, 20).circle_fill(10, 10, 10, C_RED)
-img_block = Image.new(58, 18, C_GREEN)
-img_block_y = Image.new(58, 18, C_YELLOW)
+Window.bgcolor = C_BLACK
 
-bar   = Sprite.new(0, 460, img_bar)
-lwall = Sprite.new(0, 0, img_hwall)
-rwall = Sprite.new(620, 0, img_hwall)
-twall = Sprite.new(0, 0, img_vwall)
+GAME_STATE = {
+  scene: :title,
+  score: 0
+}
 
-walls = [bar, lwall, rwall, twall]
-
-ball = Sprite.new(300, 400, img_ball)
-dx =  2
-dy = -2
-
-def move(sprite, speed_x, speed_y)
-  sprite.x += speed_x
-  sprite.y += speed_y
-end
-
-blocks = []
-10.times do |x|
-  5.times do |y|
-    blocks << Sprite.new(21 + 60 * x, 21 + 20 * y, img_block)
+# 棒
+class Bar < Sprite
+  def initialize(x = 0, y = 460)
+    super(x, y)
+    self.image = Image.new(100, 20, C_WHITE)
+  end
+  def update
+    self.x = Input.mouse_pos_x
   end
 end
-font = Font.new(24)
+
+class Walls < Array
+  def initialize
+    super
+    self << Wall.new(0, 0, 20, 480)
+    self << Wall.new(0, 0, 640, 20)
+    self << Wall.new(620, 0, 20, 480)
+  end
+  
+  def draw
+    Sprite.draw(self)
+  end
+end
+
+class Wall < Sprite
+  def initialize(x, y, width, height)
+    super(x, y)
+    self.image = Image.new(width, height, C_BLUE)
+  end
+end
+
+# ブロック
+class Blocks < Array
+  def initialize
+    super
+    colors = [C_BLUE, C_YELLOW, C_WHITE, C_RED, C_GREEN]
+    5.times do |y|
+      10.times do |x|
+        self << Block.new(21 + 60 * x , 21 + 20 * y, colors[y])
+      end
+    end
+  end
+  def draw
+    self.each do |b|
+      b.draw
+    end
+  end
+end
+
+class Block < Sprite
+  def initialize(x, y, c)
+    super(x, y)
+    self.image = Image.new(58, 18, c)
+  end
+end
+
+# ボール
+class Ball < Sprite
+  def initialize(x = 300, y = 400)
+    super(x, y)
+    self.image = Image.new(20, 20).circle_fill(10, 10, 10, C_WHITE)
+    @dx =  4
+    @dy = -4
+  end
+
+  def update(walls, bar, blocks)
+    # 横方向への移動
+    self.x += @dx
+    # 壁または棒に衝突
+    if self === walls or self === bar
+      self.x -= @dx
+      @dx *= -1
+    end
+    # ブロックに衝突
+    hit = self.check(blocks).first
+    if hit != nil
+      hit.vanish
+      blocks.delete(hit)
+      self.x -= @dx
+      @dx *= -1
+    end
+    # 縦方向への移動
+    self.y += @dy
+    # 壁または棒に衝突
+    if self === walls or self === bar
+      self.y -= @dy
+      @dy *= -1
+    end
+    # ブロックに衝突
+    hit = self.check(blocks).first
+    if hit != nil
+      hit.vanish
+      blocks.delete(hit)
+      self.y -= @dy
+      @dy *= -1
+    end
+    if self.y >= 480
+      GAME_STATE[:scene] = :game_over
+    end
+  end
+end
+
+class Game
+  def initialize
+    reset
+  end
+  def reset
+    @walls = Walls.new
+    @bar = Bar.new
+    @ball   = Ball.new
+    @blocks = Blocks.new
+  end
+  def run
+    Window.loop do
+      @walls.draw
+      case GAME_STATE[:scene]
+        when :title
+          Window.draw_font(0, 30, "PRESS SPACE", Font.default)
+          if Input.key_push?(K_SPACE)
+            GAME_STATE[:scene] = :playing
+          end
+        when :playing
+          @bar.update
+          @bar.draw
+          @ball.update(@walls, @bar, @blocks)
+          @ball.draw
+          @blocks.draw
+        when :game_over
+          Window.draw_font(0, 30, "GAME OVER", Font.default)
+          Window.draw_font(0, 60, "PRESS SPACE", Font.default)
+          if Input.key_push?(K_SPACE)
+            reset
+            GAME_STATE[:scene] = :playing
+          end
+      end
+    end
+  end
+end
 
 Window.load_resources do
-  Window.loop do
-    bar.x = Input.mouse_pos_x
-    Sprite.draw(walls)
-    move(ball, dx, 0)
-    if ball === walls
-      ball.x -= dx
-      dx = -dx
-    end
-    coll_x = ball.check(blocks)
-    if coll_x[0]
-      coll_x[0].image = img_block_y
-      coll_x[0].draw
-      coll_x[0].vanish
-      ball.x -= dx
-      dx = -dx
-    end
-    move(ball, 0, dy)
-    if ball === walls
-      ball. y -= dy
-      dy = -dy
-    end
-    coll_y = ball.check(blocks)
-    if coll_y[0]
-      coll_y[0].image = img_block_y
-      coll_y[0].draw
-      coll_y[0].vanish
-      ball. y -= dy
-      dy = -dy
-    end
-    ball.draw
-    Sprite.draw(blocks)
-    Sprite.clean(blocks)
-    string = "残りブロックは #{blocks.size}個です。"
-    puts string
-    Window.draw_font(20, 200, string, font, {:color => C_YELLOW})
-  end
+  game = Game.new
+  game.run
 end

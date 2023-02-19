@@ -58,7 +58,7 @@ function createProcess(year, month) {
                     monthDate = month+ 1
                     monthDate.toString()
                     yearDate = year.toString()
-                    searchDay = document.querySelector('section[years*="'+CSS.escape(yearDate)+'"][month*="'+CSS.escape(monthDate)+'"][day*="'+CSS.escape(dayDate)+'"]') != null
+                    searchDay = document.querySelector('section[years="'+CSS.escape(yearDate)+'"][month="'+CSS.escape(monthDate)+'"][day="'+CSS.escape(dayDate)+'"]') != null
                     if(searchDay == true) {
                         calendar += "<td>" + count + "<br>" + "<a href= #" + yearDate + "/" + monthDate + "/" + dayDate + ">有り</a>" +  "</td>";
                     } else {
