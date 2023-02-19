@@ -1,7 +1,11 @@
+# frozen_string_literal: true
+
 require 'dxopal'
 include DXOpal
 
 Window.bgcolor = C_BLACK
+Window.width = 640
+Window.height = 600
 
 GAME_STATE = {
   scene: :title,
@@ -10,28 +14,32 @@ GAME_STATE = {
 
 # 棒
 class Bar < Sprite
-  def initialize(x = 0, y = 460)
+  def initialize(x = 0, y = 580)
     super(x, y)
     self.image = Image.new(100, 20, C_WHITE)
   end
+
   def update
-    self.x = Input.mouse_pos_x
+    self.x = Input.mouse_pos_x - 50
   end
 end
 
+# 壁
 class Walls < Array
   def initialize
     super
-    self << Wall.new(0, 0, 20, 480)
+    self << Wall.new(0, 0, 20, 600)
+    self << Wall.new(0, 120, 640, 20)
     self << Wall.new(0, 0, 640, 20)
-    self << Wall.new(620, 0, 20, 480)
+    self << Wall.new(620, 0, 20, 600)
   end
-  
+
   def draw
     Sprite.draw(self)
   end
 end
 
+# 壁のイメージ
 class Wall < Sprite
   def initialize(x, y, width, height)
     super(x, y)
@@ -44,19 +52,23 @@ class Blocks < Array
   def initialize
     super
     colors = [C_BLUE, C_YELLOW, C_WHITE, C_RED, C_GREEN]
-    5.times do |y|
+    6.times do |y|
+      bc = y % 5
       10.times do |x|
-        self << Block.new(21 + 60 * x , 21 + 20 * y, colors[y])
+        GAME_STATE[:score] += 1
+        self << Block.new(21 + 60 * x, 141 + 20 * y, colors[bc])
       end
     end
   end
+
   def draw
-    self.each do |b|
+    each do |b|
       b.draw
     end
   end
 end
 
+# ブロックのイメージ
 class Block < Sprite
   def initialize(x, y, c)
     super(x, y)
@@ -74,75 +86,101 @@ class Ball < Sprite
   end
 
   def update(walls, bar, blocks)
-    # 横方向への移動
+    x_update(walls, bar, blocks)
+    y_update(walls, bar, blocks)
+    GAME_STATE[:scene] = :game_over if y >= 600
+  end
+
+  def x_update(walls, bar, blocks)
     self.x += @dx
-    # 壁または棒に衝突
-    if self === walls or self === bar
-      self.x -= @dx
-      @dx *= -1
+    reverse_x if self === walls || self === bar
+    hit = check(blocks).first
+    if !hit.nil?
+      clear(hit, blocks)
+      reverse_x
     end
-    # ブロックに衝突
-    hit = self.check(blocks).first
-    if hit != nil
-      hit.vanish
-      blocks.delete(hit)
-      self.x -= @dx
-      @dx *= -1
-    end
-    # 縦方向への移動
+  end
+
+  def reverse_x
+    self.x -= @dx
+    @dx *= -1
+  end
+
+  def y_update(walls, bar, blocks)
     self.y += @dy
-    # 壁または棒に衝突
-    if self === walls or self === bar
-      self.y -= @dy
-      @dy *= -1
+    reverse_y if self === walls || self === bar
+    hit = check(blocks).first
+    if !hit.nil?
+      clear(hit, blocks)
+      reverse_y
     end
-    # ブロックに衝突
-    hit = self.check(blocks).first
-    if hit != nil
-      hit.vanish
-      blocks.delete(hit)
-      self.y -= @dy
-      @dy *= -1
-    end
-    if self.y >= 480
-      GAME_STATE[:scene] = :game_over
-    end
+  end
+
+  def reverse_y
+    self.y -= @dy
+    @dy *= -1
+  end
+
+  def clear(hit, blocks)
+    GAME_STATE[:score] -= 1
+    blocks.delete(hit)
+    hit.vanish
   end
 end
 
+# ゲーム
 class Game
   def initialize
-    reset
+    set_item
   end
+
   def reset
+    GAME_STATE[:score] = 0
+    set_item
+  end
+
+  def set_item
     @walls = Walls.new
     @bar = Bar.new
     @ball   = Ball.new
     @blocks = Blocks.new
   end
+
   def run
     Window.loop do
       @walls.draw
       case GAME_STATE[:scene]
-        when :title
-          Window.draw_font(0, 30, "PRESS SPACE", Font.default)
-          if Input.key_push?(K_SPACE)
-            GAME_STATE[:scene] = :playing
-          end
-        when :playing
-          @bar.update
-          @bar.draw
-          @ball.update(@walls, @bar, @blocks)
-          @ball.draw
-          @blocks.draw
-        when :game_over
-          Window.draw_font(0, 30, "GAME OVER", Font.default)
-          Window.draw_font(0, 60, "PRESS SPACE", Font.default)
-          if Input.key_push?(K_SPACE)
-            reset
-            GAME_STATE[:scene] = :playing
-          end
+      when :title
+        draw_title_scene
+      when :playing
+        update_playing_scene
+      when :game_over
+        draw_game_over_scene
       end
+    end
+  end
+
+  def draw_title_scene
+    Window.draw_font(0, 30, 'PRESS SPACE', Font.default)
+    GAME_STATE[:scene] = :playing if Input.key_push?(K_SPACE)
+  end
+
+  def update_playing_scene
+    Window.draw_font(0, 0, "SCORE: #{GAME_STATE[:score]}", Font.default)
+    @bar.update
+    @bar.draw
+    @ball.update(@walls, @bar, @blocks)
+    @ball.draw
+    @blocks.draw
+    GAME_STATE[:scene] = :game_over if @ball.y >= 600
+  end
+
+  def draw_game_over_scene
+    Window.draw_font(0, 30, 'GAME OVER', Font.default)
+    Window.draw_font(0, 60, 'PRESS SPACE', Font.default)
+    if Input.key_push?(K_SPACE)
+      reset
+      GAME_STATE[:scene] = :playing
     end
   end
 end
