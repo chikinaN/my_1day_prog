@@ -11,7 +11,7 @@ GAME_STATE = {
   scene: :title,
   score: 0
 }
-COLORS = [C_BLUE, C_YELLOW, C_WHITE, C_RED, C_GREEN]
+COLORS = [C_BLUE, C_YELLOW, C_WHITE, C_RED, C_GREEN, C_WHITE, C_MAGENTA]
 
 # 棒
 class Bar < Sprite
@@ -54,18 +54,19 @@ class Blocks < Array
     super
     6.times do |y|
       10.times do |x|
-        GAME_STATE[:score] += 1
         self << rand_create(x, y)
+        GAME_STATE[:score] += 1
       end
     end
   end
 
   def rand_create(x, y)
-    bc = y % 5
-    if rand(10) <= 8
-      Block.new(21 + 60 * x, 141 + 20 * y, COLORS[bc])
-    else
+    if rand(10) <= 4
+      Block.new(21 + 60 * x, 141 + 20 * y, COLORS[5])
+    elsif rand(10) <= 8
       Block_2count.new(21 + 60 * x, 141 + 20 * y, COLORS[1])
+    else
+      Block_broken.new(21 + 60 * x, 141 + 20 * y)
     end
   end
 
@@ -91,9 +92,11 @@ class BlockBase < Sprite
   def hit
     @hit_count -= 1
     if @hit_count < 0
+      self.image = Image.new(58, 18, COLORS[1])
+      self.draw
       self.vanish
     else
-      self.image = Image.new(58, 18, C_CYAN)
+      self.image = Image.new(58, 18, COLORS[5])
     end
   end
 end
@@ -105,12 +108,21 @@ class Block_2count < BlockBase
   end
 end
 
+# 勝手に壊れるブロック
+class Block_broken < BlockBase
+  def initialize(x, y, c)
+    super(x, y, c, 1)
+    self.vanish
+  end
+end
+
 # 普通のブロック
 class Block < BlockBase
   def initialize(x, y, c)
     super(x, y, c, 0)
   end
 end
+
 # ボール
 class Ball < Sprite
   def initialize(x = 300, y = 400)
@@ -159,10 +171,10 @@ class Ball < Sprite
   end
 
   def clear(hit, blocks)
-    GAME_STATE[:score] -= 1
     if hit.hit_count == 0
       blocks.delete(hit)
       hit.vanish
+      GAME_STATE[:score] -= 1
     else
       hit.hit
     end
@@ -197,36 +209,53 @@ class Game
         update_playing_scene
       when :game_over
         draw_game_over_scene
+      when :game_clear
+        draw_game_clear_scene
       end
     end
   end
 
   def draw_title_scene
     Window.draw_font(21, 21, 'PRESS SPACE', Font.default)
-    if Input.key_push?(K_SPACE)
-      GAME_STATE[:scene] = :playing
-    end
+    game_re_create
   end
 
   def update_playing_scene
     content_detail
+    content_update
+    if @ball.y >= 600
+      GAME_STATE[:scene] = :game_over
+    end
+    if GAME_STATE[:score] == 0
+      GAME_STATE[:scene] = :game_clear
+    end
+  end
+
+  def content_detail
+    Window.draw_font(21, 21, "残り: #{GAME_STATE[:score]} 個", Font.default)
+  end
+
+  def content_update
     @bar.update
     @bar.draw
     @ball.update(@walls, @bar, @blocks)
     @ball.draw
     @blocks.draw
-    if @ball.y >= 600
-      GAME_STATE[:scene] = :game_over
-    end
-  end
-
-  def content_detail
-    Window.draw_font(21, 21, "SCORE: #{GAME_STATE[:score]}", Font.default)
   end
 
   def draw_game_over_scene
     Window.draw_font(21, 21, 'GAME OVER', Font.default)
     Window.draw_font(21, 51, 'PRESS SPACE', Font.default)
+    game_re_create
+  end
+
+  def draw_game_clear_scene
+    Window.draw_font(21, 21, 'GAME CLEAR', Font.default)
+    Window.draw_font(21, 51, 'PRESS SPACE', Font.default)
+    game_re_create
+  end
+
+  def game_re_create
     if Input.key_push?(K_SPACE)
       reset
       GAME_STATE[:scene] = :playing
