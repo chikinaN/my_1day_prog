@@ -3,151 +3,149 @@
 require 'dxopal'
 include DXOpal
 
-Window.bgcolor = C_BLACK
-Window.width = 700
-Window.height = 600
-
-GAME_INFO = {
-  scene: :title,
-  score: 0,
-  health: 15
+GAME_STATE = {
+  score: 0
 }
 
-# ゲームオブジェクトの基礎
-class GameObject < Sprite
-  def update
-    # 何もしない
+# 敵のサンプル
+class Enemy < Sprite
+  SIZE = 40
+
+  def deta_values
+    [0, 0, SIZE - 1, 10, 10, SIZE - 1]
   end
 
-  def outside_window?
-    self.x < 0 || self.x > Window.width || self.y < 0 || self.y > Window.height
+  def initialize
+    x = rand(Walls::SIZE..Window.width - Walls::SIZE)
+    y = 0
+    @hp = 2
+    @img_normal = create_triangle_image(SIZE, C_WHITE)
+    super(x, y, @img_normal)
+    @img_hit = create_triangle_image(SIZE, C_RED)
+    self.collision = deta_values
+    @dy = rand(1..6)
+    @drot = rand(1..8)
   end
-end
 
-# 弾のイメージ
-class Bullet < GameObject
-  def initialize(x, y, speed)
-    super(x, y)
-    self.image = Image.new(20, 20).circle_fill(10, 10, 10, C_WHITE)
-    @dx = 0
-    @dy = speed
+  def create_triangle_image(size, color)
+    img = Image.new(size, size)
+    img.triangle_fill(size / 2, 0, size - 1, size - 1, 0, size - 1, color)
+    img
+  end
+
+  def hit(other)
+    @hp -= 1
+    self.image = @img_hit
   end
 
   def update
     self.y += @dy
-    self.vanish if outside_window?
-  end
-end
-
-# 普通の弾の強さ
-class Shot < GameObject
-  def initialize(px, py, speed)
-    super(px, py)
-    @dx = 0
-    @dy = -speed
-    self.image = Image.new(10, 30).rect(2, 0, 6, 30, C_WHITE)
+    self.angle = (angle + @drot) % 360
+    enemy_delete
   end
 
-  def update
-    self.y += @dy
-    self.vanish if outside_window?
-  end
-
-  def create_bullet
-    Bullet.new(self.x, self.y, 5)
-  end
-end
-
-# プレイヤークラス
-class Player < GameObject
-  def initialize
-    super
-    self.image = Image.new(30, 30).circle_fill(15, 15, 15, C_RED)
-    self.x = Window.width / 2 - self.image.width / 2
-    self.y = Window.height - self.image.height - 50
-  end
-
-  def update
-    ps = 5
-    self.x += Input.x * ps
-    self.y += Input.y * ps
-    self.x = [[self.x, 0].max, Window.width - self.image.width].min
-    self.y = [[self.y, 0].max, Window.height - self.image.height].min
-  end
-
-  def fire_shot
-    shot = Shot.new(self.x + 15, self.y - 10, 10)
-    shot.add
-    shot.add(shot.create_bullet)
-  end
-
-  def input
-    self.x += Input.key_down?(K_D) ? 5 : 0
-    self.x -= Input.key_down?(K_A) ? 5 : 0
-    self.y += Input.key_down?(K_S) ? 5 : 0
-    self.y -= Input.key_down?(K_W) ? 5 : 0
-  end
-end
-
-class PlayerImage < Image
-  def initialize
-    super(30, 30)
-    circle_fill(15, 15, 15, C_WHITE)
-  end
-end
-
-# スコアボードのクラス
-class ScoreBoard
-  def initialize
-    score_content
-  end
-
-  def draw
-    score_content
-  end
-
-  def score_content
-    Window.draw_font(21, 21, "Score: #{GAME_INFO[:score]}", Font.default)
-  end
-end
-
-# ヘルスボードのクラス
-class HealthBoard
-  def initialize(x, y, initial_health)
-    super(x, y)
-    @x = x
-    @y = y
-    @health = initial_health
-    @heart_image = Image.new(20, 20).circle_fill(10, 10, 10, C_RED)
-  end
-
-  def draw
-    @health.times do |i|
-      Window.draw(@x + i * 20, @y, @heart_image)
+  def enemy_delete
+    if self.y >= Window.height
+      self.vanish
+      self.image = nil
+    end
+    if (@hp == 0)
+      self.vanish
+      self.image = nil
+      GAME_STATE[:score] += 1
     end
   end
 
-  def damage(damage)
-    @health -= damage
+end
+
+# 弾のサンプル
+class Bullet < Sprite
+  SIZE = 10
+  def deta_values
+    [SIZE / 2, SIZE / 2, (SIZE / 2) - 1]
   end
 
-  def game_over?
-    @health <= 0
+  def initialize(px, py)
+    x = px - SIZE / 2
+    y = py
+    @hp = 2
+    @img_normal = Image.new(SIZE, SIZE)
+    @img_normal.circle_fill(*deta_values, C_YELLOW)
+    super(x, y, @img_normal)
+    self.collision = deta_values
+    @dx = rand(-4..3)
+    @dy = rand(-6..-4)
+  end
+
+  def shot(other)
+    if (@hp == 0)
+      self.vanish
+      self.image = nil
+    else
+      @hp -= 1
+    end
+  end
+
+  def update
+    self.x += @dx
+    self.y += @dy
+    if self.x.negative? || self.x > Window.width || self.y.negative?
+      self.vanish
+    end
   end
 end
 
-# 壁やスコア、ヘルスなど様々な背景を定義
-class Frame < Array
-  def initialize
-    super
-    self << Wall.new(0, 0, 20, 600)
-    self << Wall.new(0, 90, 700, 20)
-    self << Wall.new(0, 0, 700, 20)
-    self << Wall.new(680, 0, 20, 600)
+# プレイヤー
+class Player < Sprite
+  SIZE = 30
+
+  def data_values
+    [SIZE / 2, 0, SIZE - 1, SIZE - 1, 0, SIZE - 1]
   end
 
-  def draw
-    Sprite.draw(self)
+  def initialize
+    x = Window.width / 2
+    y = Window.height - SIZE * 2
+    @img_normal = Image.new(SIZE, SIZE)
+    @img_normal.triangle_fill(*data_values, C_GREEN)
+    @img_hit = Image.new(SIZE, SIZE)
+    @img_hit.triangle_fill(*data_values, C_RED)
+    self.collision = data_values
+    @hit = false
+    @bullets = []
+    super(x, y, @img_normal)
+  end
+  attr_reader :bullets
+
+  def make_bullets
+    (N_BULLETS - @bullets.length).times{ @bullets << Bullet.new(@x + SIZE / 2, @y) }
+  end
+
+  def shot(other)
+    @hit = true
+  end
+
+  def update
+    self.x += Input.x * 8
+    self.x = Window.width - SIZE - Walls::SIZE if self.x > Window.width - SIZE - Walls::SIZE
+    self.x = 0 + Walls::SIZE if self.x < 0 + Walls::SIZE
+    self.y += Input.y * 8
+    self.y = Window.height - SIZE - Walls::SIZE if self.y > Window.height - SIZE - Walls::SIZE
+    self.y = 0 + Walls::SIZE if self.y < 0 + Walls::SIZE
+    self.image = @hit ? @img_hit : @img_normal
+    @hit = false
+  end
+end
+
+# 壁
+class Walls < Array
+  SIZE = 20
+  def initialize
+    super
+    self << Wall.new(0, 0, SIZE, Window.height)
+    self << Wall.new(0, Window.height - SIZE, Window.width, SIZE)
+    self << Wall.new(0, 0, Window.width, SIZE)
+    self << Wall.new(Window.width - SIZE, 0, SIZE, Window.height)
   end
 end
 
@@ -159,100 +157,47 @@ class Wall < Sprite
   end
 end
 
-# ゲームのまとめ処理
 class Game
   def initialize
-    @frame = Frame.new
     @player = Player.new
-    @score_board = ScoreBoard.new
-    @health_board = HealthBoard.new(600, 10, GAME_INFO[:health])
-  end
-
-  def update
-    case GAME_INFO[:scene]
-    when :title
-      update_title
-    when :playing
-      update_playing
-    when :game_over
-      update_game_over
-    when :game_clear
-      update_game_clear
-    end
+    @enemies = N_ENEMIES.times.map { Enemy.new }
+    @wall = Walls.new
   end
 
   def draw
-    case GAME_INFO[:scene]
-    when :title
-      draw_title
-    when :playing
-      draw_playing
-    when :game_over
-      draw_game_over
-    when :game_clear
-      draw_game_clear
+    Window.loop do
+      @sprites = [@player] + @player.bullets + @enemies
+      item_draw
+      Window.draw_font(0, 0, "SCORE: #{GAME_STATE[:score]}", Font.default)
+      item_update
+      item_clean
+      rand(N_ENEMIES - @enemies.length).times { @enemies << Enemy.new }
+      @player.make_bullets
     end
   end
 
-  def update_title
-    if Input.key_push?(K_SPACE)
-      GAME_INFO[:scene] = :playing
-    end
+  def item_draw
+    Sprite.draw(@wall)
+    Sprite.draw(@sprites)
+    @player.make_bullets
   end
 
-  def update_playing
-    Sprite.update([@player, @frame, @score_board, @health_board])
-    @player.input
-    if Input.key_push?(K_SPACE)
-      @player.fire_shot
-    end
-    if GAME_INFO[:health] <= 0
-      GAME_INFO[:scene] = :game_over
-    end
+  def item_update
+    Sprite.check(@player.bullets, @enemies)
+    Sprite.check(@enemies, @player)
+    Sprite.update(@sprites)
   end
 
-  def update_game_over
-    if Input.key_push?(K_SPACE)
-      GAME_INFO[:health] = 15
-      GAME_INFO[:score] = 0
-      @player = Player.new
-      GAME_INFO[:scene] = :playing
-    end
+  def item_clean
+    Sprite.clean(@enemies)
+    Sprite.clean(@player.bullets)
   end
 
-  def update_game_clear
-    if Input.key_push?(K_SPACE)
-      GAME_INFO[:health] = 15
-      GAME_INFO[:score] = 0
-      @player = Player.new
-      GAME_INFO[:scene] = :playing
-    end
-  end
-
-  def draw_title
-    Window.draw_font(200, 280, "Press SPACE to start", Font.default)
-  end
-
-  def draw_playing
-    Sprite.draw([@player, @frame, @score_board, @health_board])
-  end
-
-  def draw_game_over
-    Window.draw_font(250, 280, "GAME OVER", Font.default)
-    Window.draw_font(200, 320, "Press SPACE to restart", Font.default)
-  end
-
-  def draw_game_clear
-    Window.draw_font(250, 280, "GAME CLEAR!", Font.default)
-    Window.draw_font(200, 320, "Press SPACE to restart", Font.default)
-  end
 end
 
-# ウィンドウの表示
+N_ENEMIES = 20
+N_BULLETS = 30
 Window.load_resources do
   game = Game.new
-  Window.loop do
-    game.update
-    game.draw
-  end
+  game.draw
 end
